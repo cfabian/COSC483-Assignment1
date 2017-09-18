@@ -1,7 +1,3 @@
-# COSC483-Assignment1
-COSC 483 Programming Assignment 1: Symmetric Ciphers
-
-
 ## COSC 483/583: Applied Cryptography
 ### Programming Assignment 1: Symmetric Ciphers Due: 11:59:59 pm October 4, 2017
 #### Ground Rules

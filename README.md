@@ -3,15 +3,15 @@ COSC 483 Programming Assignment 1: Symmetric Ciphers
 
 
 ## COSC 483/583: Applied Cryptography
-###Programming Assignment 1: Symmetric Ciphers Due: 11:59:59 pm October 4, 2017
-####Ground Rules
+### Programming Assignment 1: Symmetric Ciphers Due: 11:59:59 pm October 4, 2017
+#### Ground Rules
 You may choose to work with up to two other student if you wish. Only one
 submission is required per group, please ensure that both group members names are on the submitted
 copy. Work must be submitted electronically via github.com. More details on this will be
 provided in class and on the course website later. The choice of programming language is yours,
 but your software will be expected to operate in an environment of my choosing, specifically an
 arch linux virtual machine.
-####Implementing AES Modes
+#### Implementing AES Modes
 Your task for this portion of the assignment is to correctly implement
 encryption and decryption of two symmetric key cipher modes, CBC and CTR. You will use
 your implementation to encrypt and decrypt files. For this assignment you are NOT responsible
@@ -35,21 +35,20 @@ available at a date prior to the due date along with an example of the testing s
 rubric.
 You are expected to provide the following deliverables, any missing deliverables will result in point
 loss:
-• Source code for both your CBC and CTR implementations.
-• A Makefile which will result in the appropriate software artifacts being generated (or a blank
+* Source code for both your CBC and CTR implementations.
+* A Makefile which will result in the appropriate software artifacts being generated (or a blank
 Makefile if compilation is not needed).
-• A file named groupMembers.txt containing all group members, this is required for groups of
+* A file named groupMembers.txt containing all group members, this is required for groups of
 size one.
-1
 I will expect the following software artifacts (executable programs) to exist in your project directory
 post execution of the make command.
-• cbc-enc : encrypts a file using cbc mode
-• ctr-enc : encrypts a file using ctr mode
-• cbc-dec : decrypts a file using cbc mode
-• ctr-dec : decrypts a file using ctr mode
+* cbc-enc : encrypts a file using cbc mode
+* ctr-enc : encrypts a file using ctr mode
+* cbc-dec : decrypts a file using cbc mode
+* ctr-dec : decrypts a file using ctr mode
 All of these executables should take the following argument flags:
-• -k <key file> : required, specifies a file storing a valid AES key as a hex encoded string
-• -i <input file> : required, specifies the path of the file that is being operated on
-• -o <output file> : required, specifies the path of the file where the resulting output is stored
-• -v <iv file> : optional, specifies the path of a file storing a valid IV as a hex encoded string,
+* -k <key file> : required, specifies a file storing a valid AES key as a hex encoded string
+* -i <input file> : required, specifies the path of the file that is being operated on
+* -o <output file> : required, specifies the path of the file where the resulting output is stored
+* -v <iv file> : optional, specifies the path of a file storing a valid IV as a hex encoded string,
 if not present a random IV should be generated

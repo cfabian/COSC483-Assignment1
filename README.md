@@ -52,8 +52,8 @@ post execution of the make command.
 * ctr-dec : decrypts a file using ctr mode
 
 All of these executables should take the following argument flags:
-* -k <key file> : required, specifies a file storing a valid AES key as a hex encoded string
-* -i <input file> : required, specifies the path of the file that is being operated on
-* -o <output file> : required, specifies the path of the file where the resulting output is stored
-* -v <iv file> : optional, specifies the path of a file storing a valid IV as a hex encoded string,
+* -k &lt;key file> : required, specifies a file storing a valid AES key as a hex encoded string
+* -i &lt;input file> : required, specifies the path of the file that is being operated on
+* -o &lt;output file> : required, specifies the path of the file where the resulting output is stored
+* -v &lt;iv file> : optional, specifies the path of a file storing a valid IV as a hex encoded string,
 if not present a random IV should be generated

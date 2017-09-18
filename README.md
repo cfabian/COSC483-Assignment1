@@ -18,18 +18,18 @@ encryption and decryption of two symmetric key cipher modes, CBC and CTR. You wi
 your implementation to encrypt and decrypt files. For this assignment you are NOT responsible
 for actually implementing the block cipher, you will be using an existing implementation of AES
 provided for you from your programming language of choice or libraries. What this means is that
-you are allowed utilize an existing implementation of AES in ECB unpadded mode only, this
+you are allowed utilize an existing implementation of AES in **ECB unpadded mode only**, this
 will give you access to the pseudorandom function, but nothing else. Use of a cryptographic library
 for anything other than unpadded ECB will result in an automatic zero. Use of other libraries
 is allowed, when in doubt ask if it is acceptable. You are expected to fully implement the logic
-for both CBC and CTR mode, including IV generation. You are expected to use your own
-padding implementation for CBC. Recall that CTR does not need to be padded, and in this
-homework your CTR mode should not use padding. Your CTR mode should be implemented
-to do encryption and decryption in parallel. You can assume it will be executing on a system
+for both CBC and CTR mode, including IV generation. **You are expected to use your own
+padding implementation for CBC**. Recall that CTR does not need to be padded, and in this
+homework your CTR mode should not use padding. **Your CTR mode should be implemented
+to do encryption and decryption in parallel**. You can assume it will be executing on a system
 with a 4-core processor.
 
-Code which does not compile will receive an initial score of 0 until you present
-me in office hours with functional code. Code will be compiled on an Arch-linux virtual
+**Code which does not compile will receive an initial score of 0 until you present
+me in office hours with functional code**. Code will be compiled on an Arch-linux virtual
 machine with an internet connection. The make command will be executed with root privilege, so
 you will be able to install any dependencies. For more information on how to install software in
 an Arch-linux environment please see the Arch linux wiki. A copy of the VM image will be made

@@ -1,5 +1,6 @@
 import binascii
 import sys
+import operator
 import os
 from Crypto.Cipher import AES
 
@@ -34,26 +35,22 @@ def decrypt(key, enc):
     return enc.decode('utf-8')
 
 def padding(raw):
-    lraw = len(raw)*8
+    lraw = len(raw[-1])*8
     modraw = lraw % 128
     remainder = blocksize - modraw
-    print("modraw:",modraw)
+    # print("modraw:",modraw)
     if modraw == 0:
-        raw += bytes("\0", encoding='utf-8') * int(((remainder)/(len(bytes("\0", encoding='utf-8')) * 8)))
+        raw.append(bytes("\0", encoding='utf-8') * int(((remainder)/(len(bytes("\0", encoding='utf-8')) * 8))))
     else:
         paddingstr = bytes(str(remainder),encoding='utf-8') * int(((remainder)/(len(bytes(str(remainder), encoding='utf-8')) * 8)))
         zerosreq = int((remainder %(len(bytes(str(remainder), encoding='utf-8')) * 8))/8)
-        print("Zeros needed:",zerosreq)
+        # print("Zeros needed:",zerosreq)
         zeros = bytes("\0", encoding='utf-8') * zerosreq
-        raw = raw + zeros + paddingstr
+        raw[-1] = raw[-1] + zeros + paddingstr
     return raw
 
-def encrypt2(a, b):# https://stackoverflow.com/questions/29408173/byte-operations-xor-in-python
-    b = b[:len(a)]
-    int_a = int.from_bytes(a, sys.byteorder)
-    int_b = int.from_bytes(b, sys.byteorder)
-    int_enc = int_a ^ int_b
-    return int_enc.to_bytes(len(a), sys.byteorder)
+def XOR(a, b):# https://stackoverflow.com/questions/29408173/byte-operations-xor-in-python
+    return bytes(map(operator.xor, a, b))
 
 # Create a function called "chunks" with two arguments, l and n:
 def chunks(l, n): # https://chrisalbon.com/python/break_list_into_chunks_of_e
@@ -66,19 +63,29 @@ def IV_Gen():
     return os.urandom(int(keysize/8))
 
 def cbc_enc(key,raw):
+    ct_split = []
     IV = IV_Gen()
+    ct_split.append(IV)
     split_raw = list(chunks(raw,int(blocksize/8)))
-    print(split_raw)
+    padded_split_raw = padding(split_raw)
+
+    for item in padded_split_raw:
+
+        block = XOR(IV,item)
+        IV = encrypt(key,block)
+        IV = bytes(IV, encoding='utf-8')
+        ct_split.append(IV)
+    ct = b''.join(ct_split)
+    return ct
 
 def cbc_dec(key,ct):
-    IV = ct
+    IV = ct[32:]
 
 if __name__ == "__main__":# Need some shit about the special way we are going to have him run our code
     key = bytes("1234567890abcdef1234567890abcdef", encoding='utf-8')
     raw = bytes("1234567890abcdefabcdefghijklm", encoding='utf-8')
     # ct = encrypt(key, padding(raw))
     # dt = decrypt(key, ct)
-    print(IV_Gen())
     ct = cbc_enc(key,raw)
     dt = cbc_dec(key,ct)
     print(ct)

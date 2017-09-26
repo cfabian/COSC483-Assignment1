@@ -49,6 +49,11 @@ def padding(raw):
         raw[-1] = raw[-1] + zeros + paddingstr
     return raw
 
+def remove_padding(raw):
+    #needs some love
+    love = 1
+    return love
+
 def XOR(a, b):# https://stackoverflow.com/questions/29408173/byte-operations-xor-in-python
     return bytes(map(operator.xor, a, b))
 
@@ -64,26 +69,40 @@ def IV_Gen():
 
 def cbc_enc(key,raw):
     ct_split = []
-    IV = IV_Gen()
-    ct_split.append(IV)
+    iv = IV_Gen()
+    ct_split.append(iv)
     split_raw = list(chunks(raw,int(blocksize/8)))
+    print(split_raw)
     padded_split_raw = padding(split_raw)
 
     for item in padded_split_raw:
 
-        block = XOR(IV,item)
-        IV = encrypt(key,block)
-        IV = bytes(IV, encoding='utf-8')
-        ct_split.append(IV)
+        block = XOR(iv,item)
+        iv = encrypt(key,block)
+        iv = bytes(iv, encoding='utf-8')
+        ct_split.append(iv)
     ct = b''.join(ct_split)
     return ct
 
 def cbc_dec(key,ct):
-    IV = ct[32:]
+    IV = ct[:32]
+    dt_split = []
+    ct = ct[32:]
+    split_raw = list(chunks(ct[32:],int(blocksize/8)))
+    print(split_raw)
+    for item in reversed(split_raw):
+        print(len(item))
+        block = decrypt(key,item)
+        dt_split.append(block)
+
+    for i in range(len(dt_split),0,-1):
+        print(i)
+
 
 if __name__ == "__main__":# Need some shit about the special way we are going to have him run our code
     key = bytes("1234567890abcdef1234567890abcdef", encoding='utf-8')
     raw = bytes("1234567890abcdefabcdefghijklm", encoding='utf-8')
+    print("raw: ",raw)
     # ct = encrypt(key, padding(raw))
     # dt = decrypt(key, ct)
     ct = cbc_enc(key,raw)

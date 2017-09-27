@@ -112,6 +112,7 @@ def ctr_enc(key,raw):
     temp = int.from_bytes(iv,byteorder="big",signed=False) + 1
     iv = (temp).to_bytes(16, byteorder="big", signed=False)
 
+
     split_raw = list(chunks(raw,int(blocksize/8)))
     for item in split_raw:
         block = encrypt(key, iv)
@@ -127,8 +128,11 @@ def ctr_dec(key, ct):
 
     temp = int.from_bytes(IV,byteorder="big",signed=False) + 1
     IV = (temp).to_bytes(16, byteorder="big", signed=False)
+    print(len(IV))
+    print(type(IV))
+    print(type(ct))
     for i in range(0, len(split_raw)):
-        block = XOR(ct[i], encrypt(key, IV))
+        block = XOR(split_raw[i], encrypt(key, IV))
         temp = int.from_bytes(IV, byteorder="big", signed=False) + 1
         IV = (temp).to_bytes(16, byteorder="big", signed=False)
         dt_split.append(block)

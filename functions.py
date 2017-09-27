@@ -55,9 +55,7 @@ def padding(raw):
 
 def remove_padding(raw):
     #needs some love
-    # print("raw",raw[-1][-1:])
     i = int.from_bytes(raw[-1][-1:],byteorder="big",signed=False)
-    print(i)
     raw[-1] = raw[-1][:16 - i]
     return raw
 
@@ -87,7 +85,7 @@ def cbc_enc(key,raw):
         iv = encrypt(key,block)
         ct_split.append(iv)
 
-    print("Enc:", ct_split)
+    # print("Enc:", ct_split)
     ct = b''.join(ct_split)
     return ct
 
@@ -103,7 +101,6 @@ def cbc_dec(key,ct):
             dt_split.append(XOR(block,IV))
         else:
             dt_split.append(XOR(block, split_raw[i - 1]))
-    print(dt_split)
     dt_split = remove_padding(dt_split)
     return b''.join(dt_split)
 

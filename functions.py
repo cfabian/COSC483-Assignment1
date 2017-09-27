@@ -1,4 +1,4 @@
-import binascii
+from multiprocessing import Process
 import operator
 import os
 from Crypto.Cipher import AES
@@ -128,9 +128,7 @@ def ctr_dec(key, ct):
 
     temp = int.from_bytes(IV,byteorder="big",signed=False) + 1
     IV = (temp).to_bytes(16, byteorder="big", signed=False)
-    print(len(IV))
-    print(type(IV))
-    print(type(ct))
+
     for i in range(0, len(split_raw)):
         block = XOR(split_raw[i], encrypt(key, IV))
         temp = int.from_bytes(IV, byteorder="big", signed=False) + 1

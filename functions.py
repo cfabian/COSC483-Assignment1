@@ -108,11 +108,15 @@ def ctr_enc(key,raw):
     ct_split = []
     iv = IV_Gen()
     ct_split.append(iv)
-    iv += 1
+    # TODO: figure out how to add one to bytes of iv
+    temp = int.from_bytes(iv,byteorder="big",signed=False) + 1
+    iv = (temp).to_bytes(16, byteorder="big", signed=False)
+
     split_raw = list(chunks(raw,int(blocksize/8)))
     for item in split_raw:
         block = encrypt(key, iv)
-        iv += 1
+        temp = int.from_bytes(iv, byteorder="big", signed=False) + 1
+        iv = (temp).to_bytes(16, byteorder="big", signed=False)
         ct_split.append(XOR(block, item))
     return b''.join(ct_split)
 
@@ -120,10 +124,13 @@ def ctr_dec(key, ct):
     IV = ct[:16]
     dt_split = []
     split_raw = list(chunks(ct[16:], int(blocksize/8)))
-    IV += 1
+
+    temp = int.from_bytes(IV,byteorder="big",signed=False) + 1
+    IV = (temp).to_bytes(16, byteorder="big", signed=False)
     for i in range(0, len(split_raw)):
         block = XOR(ct[i], encrypt(key, IV))
-        IV+=1
+        temp = int.from_bytes(IV, byteorder="big", signed=False) + 1
+        IV = (temp).to_bytes(16, byteorder="big", signed=False)
         dt_split.append(block)
     return b''.join(dt_split)
 

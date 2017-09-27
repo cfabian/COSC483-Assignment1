@@ -104,6 +104,29 @@ def cbc_dec(key,ct):
     dt_split = remove_padding(dt_split)
     return b''.join(dt_split)
 
+def ctr_enc(key,raw):
+    ct_split = []
+    iv = IV_Gen()
+    ct_split.append(iv)
+    iv += 1
+    split_raw = list(chunks(raw,int(blocksize/8)))
+    for item in split_raw:
+        block = encrypt(key, iv)
+        iv += 1
+        ct_split.append(XOR(block, item))
+    return b''.join(ct_split)
+
+def ctr_dec(key, ct):
+    IV = ct[:16]
+    dt_split = []
+    split_raw = list(chunks(ct[16:], int(blocksize/8)))
+    IV += 1
+    for i in range(0, len(split_raw)):
+        block = XOR(ct[i], encrypt(key, IV))
+        IV+=1
+        dt_split.append(block)
+    return b''.join(dt_split)
+
 if __name__ == "__main__":# Need some shit about the special way we are going to have him run our code
     key = bytes("1234567890abcdef1234567890abcdef", encoding='utf-8')
     raw = bytes("1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdefads", encoding='utf-8')
@@ -112,5 +135,9 @@ if __name__ == "__main__":# Need some shit about the special way we are going to
     # dt = decrypt(key, ct)
     ct = cbc_enc(key,raw)
     dt = cbc_dec(key,ct)
-    print("CipherText:",ct)
-    print("PlainText: ",dt)
+    ct2 = ctr_enc(key,raw)
+    dt2 = ctr_dec(key,ct2)
+    print("CipherText(CBC): ",ct)
+    print("PlainText(CBC): ",dt)
+    print("CipherText(CTR): ",ct2)
+    print("PlainText(CTR): ", dt2)

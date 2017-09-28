@@ -2,7 +2,7 @@ import binascii
 import operator
 import os
 from Crypto.Cipher import AES
-
+import sys
 
 
 # Credit to Chris Coe for this code
@@ -108,7 +108,6 @@ def ctr_enc(key,raw):
     ct_split = []
     iv = IV_Gen()
     ct_split.append(iv)
-    # TODO: figure out how to add one to bytes of iv
     temp = int.from_bytes(iv,byteorder="big",signed=False) + 1
     iv = (temp).to_bytes(16, byteorder="big", signed=False)
 
@@ -139,9 +138,36 @@ def ctr_dec(key, ct):
     return b''.join(dt_split)
 
 if __name__ == "__main__":# Need some shit about the special way we are going to have him run our code
-    key = bytes("1234567890abcdef1234567890abcdef", encoding='utf-8')
-    raw = bytes("1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdefads", encoding='utf-8')
-    print("raw: ",raw)
+    mode = ''
+    keyFile = None
+    inputFile = None
+    outputFile = None
+    ivFile = None
+    if len(sys.argv) == 2:
+        print(sys.argv)
+        print("Usage: ./[cbc-enc/cbc-dec/ctr-enc/ctr-dec] -k keyFile -i inputFile -o outputFile (-v ivFile)")
+        exit()
+    else:
+        mode = sys.argv[1]
+        for i in range(2, len(sys.argv)):
+            if sys.argv[i] == '-k':
+                keyFile = sys.argv[i+1]
+            elif sys.argv[i] == '-i':
+                inputFile = sys.argv[i+1]
+            elif sys.argv[i] == '-o':
+                outputFile = sys.argv[i+1]
+            elif sys.argv[i] == '-v':
+                ivFile = sys.argv[i+1]
+    if keyFile == None or inputFile == None or outputFile == None:
+        print(sys.argv)
+        print("Usage: ./[cbc-enc/cbc-dec/ctr-enc/ctr-dec] -k keyFile -i inputFile -o outputFile (-v ivFile)")
+        exit()
+    #TODO: get key and raw from files, the files are hex encoded
+    key = ''
+    raw = ''
+#    key = bytes("1234567890abcdef1234567890abcdef", encoding='utf-8')
+#    raw = bytes("1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdefads", encoding='utf-8')
+#    print("raw: ",raw)
     # ct = encrypt(key, padding(raw))
     # dt = decrypt(key, ct)
     ct = cbc_enc(key,raw)

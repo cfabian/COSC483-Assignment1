@@ -141,7 +141,7 @@ if __name__ == "__main__":# Need some shit about the special way we are going to
     inputFile = None
     outputFile = None
     ivFile = None
-    if len(sys.argv) == 2:
+    if len(sys.argv) <= 2:
         print(sys.argv)
         print("Usage: ./[cbc-enc/cbc-dec/ctr-enc/ctr-dec] -k keyFile -i inputFile -o outputFile (-v ivFile)")
         exit()

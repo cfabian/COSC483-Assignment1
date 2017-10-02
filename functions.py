@@ -188,6 +188,7 @@ if __name__ == "__main__":# Need some shit about the special way we are going to
         exit()
     else:
         mode = sys.argv[1]
+        print(mode)
         for i in range(2, len(sys.argv)):
             if sys.argv[i] == '-k':
                 keyFile = sys.argv[i+1]
@@ -203,24 +204,42 @@ if __name__ == "__main__":# Need some shit about the special way we are going to
         exit()
     #TODO: get key and raw from files, the files are hex encoded
 #    key = ''
-#    raw = ''
+    raw = bytes('', encoding='utf-8')
     key = bytes("1234567890abcdef1234567890abcdef", encoding='utf-8')
-    raw = bytes("1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdefads", encoding='utf-8')
-#    print("raw: ",raw)
-    # ct = encrypt(key, padding(raw))
-    # dt = decrypt(key, ct)
- #'''   if mode == 'cbc-enc':
- #       with open(inputFile) as f:
- #           raw += f.read()
- #       raw = bytes(raw, encoding='utf-8')
- #       ct = cbc_enc(key, raw)
- #       with open(outputFile, 'w') as f:
- #           f.write(ct) '''
-    ct = cbc_enc(key,raw)
-    dt = cbc_dec(key,ct)
-    ct2 = ctr_enc(key,raw)
-    dt2 = ctr_dec(key,ct2)
-    print("CipherText(CBC): ",ct)
-    print("PlainText(CBC): ",dt)
-    print("CipherText(CTR): ",ct2)
-    print("PlainText(CTR): ", dt2)
+    #raw = bytes("1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdefads", encoding='utf-8')
+    output = open(outputFile, 'wb')
+    input = open(inputFile, 'rb')
+    for line in input:
+        raw += line
+#    if raw[0] == 'b':
+#        raw = raw[2:len(raw)-2]
+#        print(str(raw))
+    #raw = bytes(raw, encoding='utf-8')
+    if mode == "cbc-enc":
+        ct = cbc_enc(key,raw)
+        print('CipherText (CBC): ', ct)
+        output.write(ct)
+    elif mode == 'cbc-dec':
+        dt = cbc_dec(key, raw)
+        print('PlainText (CBC): ', dt)
+        output.write(dt)
+    elif mode == 'ctr-enc':
+        ct = ctr_enc(key, raw)
+        print('CipherText (CTR): ', ct)
+        output.write(ct)
+    elif mode == 'ctr-dec':
+        dt = ctr_dec(key, raw)
+        print('PlainText (CTR): ', dt)
+        output.write(dt)
+    else:
+        print("Invalid Mode")
+        exit()
+#    ct = cbc_enc(key,raw)
+#    dt = cbc_dec(key,ct)
+#    ct2 = ctr_enc(key,raw)
+#    dt2 = ctr_dec(key,ct2)
+#    print("PlainText(CBC): ",dt)
+#    print("CipherText(CTR): ",ct2)
+#    print("PlainText(CTR): ", dt2)
+    output.close()
+    input.close()

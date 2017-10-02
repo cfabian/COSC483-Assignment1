@@ -105,60 +105,76 @@ def cbc_dec(key,ct):
     dt_split = remove_padding(dt_split)
     return b''.join(dt_split)
 
+# parallel_encrypt: This function does the encryption for a block at index (iv-starting_point) in parallel_list.
 def parallel_encrypt(key, raw, iv, starting_point, parallel_list):
     block = encrypt(key, iv)
     iv_int = int.from_bytes(iv,byteorder="big",signed=False)
     starting_int = int.from_bytes(starting_point, byteorder="big", signed=False)
     parallel_list[iv_int-starting_int] = XOR(block, raw)
-#def parallel_decrypt(key, ct):
 
 def ctr_enc(key,raw):
-    #ct_split = []
+    # Initialize IV and split raw into blocks.
     iv = IV_Gen()
     starting_point = iv
     split_raw = list(chunks(raw,int(blocksize/8)))
+
+    # Create a synchronized list using a Manager
     manager = Manager()
     ct_split = manager.list([0] * (len(split_raw)+1))
     ct_split[0] = iv
-    #ct_split.append(iv)
+
+    # Increment IV by 1 for first encryption
     temp = int.from_bytes(iv,byteorder="big",signed=False) + 1
     iv = (temp).to_bytes(16, byteorder="big", signed=False)
 
+    # Start a process for each block
     process_list = []
     for item in split_raw:
         p = Process(target=parallel_encrypt, args=(key,item,iv,starting_point,ct_split,))
         p.start()
         process_list.append(p)
-        #parallel_encrypt(key,item,iv,starting_point, ct_split)
         temp = int.from_bytes(iv,byteorder="big",signed=False) + 1
         iv = (temp).to_bytes(16, byteorder="big", signed=False)
-#        block = encrypt(key, iv)
-#        temp = int.from_bytes(iv, byteorder="big", signed=False) + 1
-#        iv = (temp).to_bytes(16, byteorder="big", signed=False)
-#        ct_split.append(XOR(block, item))
+
+    # Block until all processes are complete
     while True:
         done = True
         for process in process_list:
-            print(process.is_alive())
             if process.is_alive():
                 done = False
         if done == True:
             break
     return b''.join(ct_split)
 
-def ctr_dec(key, ct):
-    IV = ct[:16]
-    dt_split = []
-    split_raw = list(chunks(ct[16:], int(blocksize/8)))
+def parallel_decrypt(key, ct, iv, index, parallel_list):
+    block = XOR(ct, encrypt(key, iv))
+    parallel_list[index] = block
 
+def ctr_dec(key, ct):
+    # Initialize IV and split ciphertext into blocks, create synced list
+    IV = ct[:16]
+    manager = Manager()
+    split_raw = list(chunks(ct[16:], int(blocksize/8)))
+    dt_split = manager.list([0] * len(split_raw))
     temp = int.from_bytes(IV,byteorder="big",signed=False) + 1
     IV = (temp).to_bytes(16, byteorder="big", signed=False)
 
+    # Start up a new process for each IV+1
+    process_list = []
     for i in range(0, len(split_raw)):
-        block = XOR(split_raw[i], encrypt(key, IV))
-        temp = int.from_bytes(IV, byteorder="big", signed=False) + 1
+        p = Process(target=parallel_decrypt, args=(key,split_raw[i],IV,i,dt_split,))
+        p.start()
+        process_list.append(p)
+        temp = int.from_bytes(IV, byteorder="big", signed=False) + 1 # Increment IV for next block
         IV = (temp).to_bytes(16, byteorder="big", signed=False)
-        dt_split.append(block)
+    # Block until all processes are complete
+    while True:
+        done = True
+        for process in process_list:
+            if process.is_alive():
+                done = False
+        if done == True:
+            break
     return b''.join(dt_split)
 
 if __name__ == "__main__":# Need some shit about the special way we are going to have him run our code

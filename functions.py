@@ -3,7 +3,8 @@ import operator
 import os
 from Crypto.Cipher import AES
 import sys
-
+from multiprocessing import Process,Manager
+import binascii
 
 # Credit to Chris Coe for this code
 # Requires pycrypto, which does indeed work for python3
@@ -104,20 +105,45 @@ def cbc_dec(key,ct):
     dt_split = remove_padding(dt_split)
     return b''.join(dt_split)
 
+def parallel_encrypt(key, raw, iv, starting_point, parallel_list):
+    block = encrypt(key, iv)
+    iv_int = int.from_bytes(iv,byteorder="big",signed=False)
+    starting_int = int.from_bytes(starting_point, byteorder="big", signed=False)
+    parallel_list[iv_int-starting_int] = XOR(block, raw)
+#def parallel_decrypt(key, ct):
+
 def ctr_enc(key,raw):
-    ct_split = []
+    #ct_split = []
     iv = IV_Gen()
-    ct_split.append(iv)
+    starting_point = iv
+    split_raw = list(chunks(raw,int(blocksize/8)))
+    manager = Manager()
+    ct_split = manager.list([0] * (len(split_raw)+1))
+    ct_split[0] = iv
+    #ct_split.append(iv)
     temp = int.from_bytes(iv,byteorder="big",signed=False) + 1
     iv = (temp).to_bytes(16, byteorder="big", signed=False)
 
-
-    split_raw = list(chunks(raw,int(blocksize/8)))
+    process_list = []
     for item in split_raw:
-        block = encrypt(key, iv)
-        temp = int.from_bytes(iv, byteorder="big", signed=False) + 1
+        p = Process(target=parallel_encrypt, args=(key,item,iv,starting_point,ct_split,))
+        p.start()
+        process_list.append(p)
+        #parallel_encrypt(key,item,iv,starting_point, ct_split)
+        temp = int.from_bytes(iv,byteorder="big",signed=False) + 1
         iv = (temp).to_bytes(16, byteorder="big", signed=False)
-        ct_split.append(XOR(block, item))
+#        block = encrypt(key, iv)
+#        temp = int.from_bytes(iv, byteorder="big", signed=False) + 1
+#        iv = (temp).to_bytes(16, byteorder="big", signed=False)
+#        ct_split.append(XOR(block, item))
+    while True:
+        done = True
+        for process in process_list:
+            print(process.is_alive())
+            if process.is_alive():
+                done = False
+        if done == True:
+            break
     return b''.join(ct_split)
 
 def ctr_dec(key, ct):
@@ -142,7 +168,6 @@ if __name__ == "__main__":# Need some shit about the special way we are going to
     outputFile = None
     ivFile = None
     if len(sys.argv) <= 2:
-        print(sys.argv)
         print("Usage: ./[cbc-enc/cbc-dec/ctr-enc/ctr-dec] -k keyFile -i inputFile -o outputFile (-v ivFile)")
         exit()
     else:
@@ -161,13 +186,20 @@ if __name__ == "__main__":# Need some shit about the special way we are going to
         print("Usage: ./[cbc-enc/cbc-dec/ctr-enc/ctr-dec] -k keyFile -i inputFile -o outputFile (-v ivFile)")
         exit()
     #TODO: get key and raw from files, the files are hex encoded
-    key = ''
-    raw = ''
-#    key = bytes("1234567890abcdef1234567890abcdef", encoding='utf-8')
-#    raw = bytes("1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdefads", encoding='utf-8')
+#    key = ''
+#    raw = ''
+    key = bytes("1234567890abcdef1234567890abcdef", encoding='utf-8')
+    raw = bytes("1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdefads", encoding='utf-8')
 #    print("raw: ",raw)
     # ct = encrypt(key, padding(raw))
     # dt = decrypt(key, ct)
+ #'''   if mode == 'cbc-enc':
+ #       with open(inputFile) as f:
+ #           raw += f.read()
+ #       raw = bytes(raw, encoding='utf-8')
+ #       ct = cbc_enc(key, raw)
+ #       with open(outputFile, 'w') as f:
+ #           f.write(ct) '''
     ct = cbc_enc(key,raw)
     dt = cbc_dec(key,ct)
     ct2 = ctr_enc(key,raw)

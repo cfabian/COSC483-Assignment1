@@ -73,13 +73,14 @@ def chunks(l, n): # https://chrisalbon.com/python/break_list_into_chunks_of_e
 def IV_Gen():
     return os.urandom(int(blocksize/8))
 
-def cbc_enc(key,raw):
+def cbc_enc(key,raw,iv):
     ct_split = []
-    iv = IV_Gen()
+    #iv = IV_Gen()
     ct_split.append(iv)
     split_raw = list(chunks(raw,int(blocksize/8)))
     # print("split raw", split_raw)
     padded_split_raw = padding(split_raw)
+    print(padded_split_raw)
     # print("padded_split_raw",padded_split_raw)
     for item in padded_split_raw:
         block = XOR(iv,item)
@@ -112,9 +113,9 @@ def parallel_encrypt(key, raw, iv, starting_point, parallel_list):
     starting_int = int.from_bytes(starting_point, byteorder="big", signed=False)
     parallel_list[iv_int-starting_int] = XOR(block, raw)
 
-def ctr_enc(key,raw):
+def ctr_enc(key,raw,iv):
     # Initialize IV and split raw into blocks.
-    iv = IV_Gen()
+    #iv = IV_Gen()
     starting_point = iv
     split_raw = list(chunks(raw,int(blocksize/8)))
 
@@ -179,6 +180,7 @@ def ctr_dec(key, ct):
 
 if __name__ == "__main__":# Need some shit about the special way we are going to have him run our code
     mode = ''
+    iv = None
     keyFile = None
     inputFile = None
     outputFile = None
@@ -198,10 +200,16 @@ if __name__ == "__main__":# Need some shit about the special way we are going to
                 outputFile = sys.argv[i+1]
             elif sys.argv[i] == '-v':
                 ivFile = sys.argv[i+1]
+                file = open(ivFile, 'rb')
+                iv = bytes('', encoding='utf-8')
+                for line in file:
+                    iv += line
     if keyFile == None or inputFile == None or outputFile == None:
         print(sys.argv)
         print("Usage: ./[cbc-enc/cbc-dec/ctr-enc/ctr-dec] -k keyFile -i inputFile -o outputFile (-v ivFile)")
         exit()
+    if iv == None:
+        iv = IV_Gen()
     #TODO: get key and raw from files, the files are hex encoded
 #    key = ''
     raw = bytes('', encoding='utf-8')
@@ -216,7 +224,7 @@ if __name__ == "__main__":# Need some shit about the special way we are going to
 #        print(str(raw))
     #raw = bytes(raw, encoding='utf-8')
     if mode == "cbc-enc":
-        ct = cbc_enc(key,raw)
+        ct = cbc_enc(key,raw,iv)
         print('CipherText (CBC): ', ct)
         output.write(ct)
     elif mode == 'cbc-dec':
@@ -224,7 +232,7 @@ if __name__ == "__main__":# Need some shit about the special way we are going to
         print('PlainText (CBC): ', dt)
         output.write(dt)
     elif mode == 'ctr-enc':
-        ct = ctr_enc(key, raw)
+        ct = ctr_enc(key, raw, iv)
         print('CipherText (CTR): ', ct)
         output.write(ct)
     elif mode == 'ctr-dec':

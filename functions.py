@@ -3,7 +3,8 @@ import operator
 import os
 from Crypto.Cipher import AES
 import sys
-from multiprocessing import Process,Manager
+from multiprocessing import Process,Manager, Pool
+import multiprocessing as mp
 import binascii
 
 # Credit to Chris Coe for this code
@@ -83,16 +84,13 @@ def cbc_enc(key,raw,iv):
     ct_split = []
     ct_split.append(iv)
     split_raw = list(chunks(raw,int(blocksize/8)))
-    # print("split raw", split_raw)
     padded_split_raw = padding(split_raw)
     print(padded_split_raw)
-    # print("padded_split_raw",padded_split_raw)
     for item in padded_split_raw:
         block = XOR(iv,item)
         iv = encrypt(key,block)
         ct_split.append(iv)
 
-    # print("Enc:", ct_split)
     ct = b''.join(ct_split)
     return ct
 
@@ -101,7 +99,6 @@ def cbc_dec(key,ct):
     IV = ct[:16]
     dt_split = []
     split_raw = list(chunks(ct[16:],int(blocksize/8)))
-    # print("Dec:",split_raw)
     for i in range(0,len(split_raw)):
         block = decrypt(key,split_raw[i])
         if (i == 0):
@@ -122,7 +119,6 @@ def parallel_encrypt(key, raw, iv, starting_point, parallel_list):
 
 def ctr_enc(key,raw,iv):
     # Initialize IV and split raw into blocks.
-    #iv = IV_Gen()
     starting_point = iv
     split_raw = list(chunks(raw,int(blocksize/8)))
 
@@ -136,22 +132,16 @@ def ctr_enc(key,raw,iv):
     iv = (temp).to_bytes(16, byteorder="big", signed=False)
 
     # Start a process for each block
-    process_list = []
+    num_workers = mp.cpu_count()
+    pool = Pool(num_workers)
     for item in split_raw:
-        p = Process(target=parallel_encrypt, args=(key,item,iv,starting_point,ct_split,))
-        p.start()
-        process_list.append(p)
+        pool.apply_async(parallel_encrypt, args=(key,item,iv,starting_point,ct_split,))
         temp = int.from_bytes(iv,byteorder="big",signed=False) + 1
         iv = (temp).to_bytes(16, byteorder="big", signed=False)
 
     # Block until all processes are complete
-    while True:
-        done = True
-        for process in process_list:
-            if process.is_alive():
-                done = False
-        if done == True:
-            break
+    pool.close()
+    pool.join()
     return b''.join(ct_split)
 
 
@@ -170,21 +160,16 @@ def ctr_dec(key, ct):
     IV = (temp).to_bytes(16, byteorder="big", signed=False)
 
     # Start up a new process for each IV+1
-    process_list = []
+    num_workers = mp.cpu_count()
+    pool = Pool(num_workers)
     for i in range(0, len(split_raw)):
-        p = Process(target=parallel_decrypt, args=(key,split_raw[i],IV,i,dt_split,))
-        p.start()
-        process_list.append(p)
+        pool.apply_async(parallel_decrypt, args=(key,split_raw[i],IV,i,dt_split))
         temp = int.from_bytes(IV, byteorder="big", signed=False) + 1 # Increment IV for next block
         IV = (temp).to_bytes(16, byteorder="big", signed=False)
+
     # Block until all processes are complete
-    while True:
-        done = True
-        for process in process_list:
-            if process.is_alive():
-                done = False
-        if done == True:
-            break
+    pool.close()
+    pool.join()
     return b''.join(dt_split)
 
 
@@ -207,9 +192,9 @@ if __name__ == "__main__":# Need some shit about the special way we are going to
             if sys.argv[i] == '-k':
                 keyFile = sys.argv[i+1]
                 file = open(keyFile, 'rb')
-                for line in file:
-                    key += line
-                key = binascii.unhexlify(key)
+            #    for line in file:
+            #        key += line
+            #    key = binascii.unhexlify(key)
             elif sys.argv[i] == '-i':
                 inputFile = sys.argv[i+1]
             elif sys.argv[i] == '-o':
@@ -228,7 +213,7 @@ if __name__ == "__main__":# Need some shit about the special way we are going to
     if iv == None:
         iv = IV_Gen()
     #TODO: get key and raw from files, the files are hex encoded
-    #key = bytes("1234567890abcdef1234567890abcdef", encoding='utf-8')
+    key = bytes("1234567890abcdef1234567890abcdef", encoding='utf-8')
     #raw = bytes("1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdefads", encoding='utf-8')
     output = open(outputFile, 'wb')
     input = open(inputFile, 'rb')

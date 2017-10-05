@@ -220,6 +220,7 @@ if __name__ == "__main__":# Need some shit about the special way we are going to
                 iv = bytes('', encoding='utf-8')
                 for line in file:
                     iv += line
+                print(len(iv))
     if keyFile == None or inputFile == None or outputFile == None:
         print(sys.argv)
         print("Usage: ./[cbc-enc/cbc-dec/ctr-enc/ctr-dec] -k keyFile -i inputFile -o outputFile (-v ivFile)")

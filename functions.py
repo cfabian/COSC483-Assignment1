@@ -33,6 +33,7 @@ def decrypt(key, enc):
     enc = cipher.decrypt(enc)
     return enc
 
+
 def padding(raw):
 
     lraw = len(raw[-1])*8
@@ -54,14 +55,17 @@ def padding(raw):
 
     return raw
 
+
 def remove_padding(raw):
     #needs some love
     i = int.from_bytes(raw[-1][-1:],byteorder="big",signed=False)
     raw[-1] = raw[-1][:16 - i]
     return raw
 
+
 def XOR(a, b):# https://stackoverflow.com/questions/29408173/byte-operations-xor-in-python
     return bytes(map(operator.xor, a, b))
+
 
 # Create a function called "chunks" with two arguments, l and n:
 def chunks(l, n): # https://chrisalbon.com/python/break_list_into_chunks_of_e
@@ -70,12 +74,13 @@ def chunks(l, n): # https://chrisalbon.com/python/break_list_into_chunks_of_e
         # Create an index range for l of n items:
         yield l[i:i+n]
 
+
 def IV_Gen():
     return os.urandom(int(blocksize/8))
 
+
 def cbc_enc(key,raw,iv):
     ct_split = []
-    #iv = IV_Gen()
     ct_split.append(iv)
     split_raw = list(chunks(raw,int(blocksize/8)))
     # print("split raw", split_raw)
@@ -91,9 +96,9 @@ def cbc_enc(key,raw,iv):
     ct = b''.join(ct_split)
     return ct
 
+
 def cbc_dec(key,ct):
     IV = ct[:16]
-    # print("IV:", IV)
     dt_split = []
     split_raw = list(chunks(ct[16:],int(blocksize/8)))
     # print("Dec:",split_raw)
@@ -106,12 +111,14 @@ def cbc_dec(key,ct):
     dt_split = remove_padding(dt_split)
     return b''.join(dt_split)
 
+
 # parallel_encrypt: This function does the encryption for a block at index (iv-starting_point) in parallel_list.
 def parallel_encrypt(key, raw, iv, starting_point, parallel_list):
     block = encrypt(key, iv)
     iv_int = int.from_bytes(iv,byteorder="big",signed=False)
     starting_int = int.from_bytes(starting_point, byteorder="big", signed=False)
     parallel_list[iv_int-starting_int] = XOR(block, raw)
+
 
 def ctr_enc(key,raw,iv):
     # Initialize IV and split raw into blocks.
@@ -147,9 +154,11 @@ def ctr_enc(key,raw,iv):
             break
     return b''.join(ct_split)
 
+
 def parallel_decrypt(key, ct, iv, index, parallel_list):
     block = XOR(ct, encrypt(key, iv))
     parallel_list[index] = block
+
 
 def ctr_dec(key, ct):
     # Initialize IV and split ciphertext into blocks, create synced list
@@ -178,14 +187,17 @@ def ctr_dec(key, ct):
             break
     return b''.join(dt_split)
 
+
 if __name__ == "__main__":# Need some shit about the special way we are going to have him run our code
     mode = ''
+    raw = bytes('', encoding='utf-8')
+    key = bytes('', encoding='utf-8')
     iv = None
     keyFile = None
     inputFile = None
     outputFile = None
     ivFile = None
-    if len(sys.argv) <= 2:
+    if len(sys.argv) <= 6:
         print("Usage: ./[cbc-enc/cbc-dec/ctr-enc/ctr-dec] -k keyFile -i inputFile -o outputFile (-v ivFile)")
         exit()
     else:
@@ -194,6 +206,10 @@ if __name__ == "__main__":# Need some shit about the special way we are going to
         for i in range(2, len(sys.argv)):
             if sys.argv[i] == '-k':
                 keyFile = sys.argv[i+1]
+                file = open(keyFile, 'rb')
+                for line in file:
+                    key += line
+                key = binascii.unhexlify(key)
             elif sys.argv[i] == '-i':
                 inputFile = sys.argv[i+1]
             elif sys.argv[i] == '-o':
@@ -211,19 +227,15 @@ if __name__ == "__main__":# Need some shit about the special way we are going to
     if iv == None:
         iv = IV_Gen()
     #TODO: get key and raw from files, the files are hex encoded
-#    key = ''
-    raw = bytes('', encoding='utf-8')
-    key = bytes("1234567890abcdef1234567890abcdef", encoding='utf-8')
+    #key = bytes("1234567890abcdef1234567890abcdef", encoding='utf-8')
     #raw = bytes("1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdefads", encoding='utf-8')
     output = open(outputFile, 'wb')
     input = open(inputFile, 'rb')
+
     for line in input:
         raw += line
-#    if raw[0] == 'b':
-#        raw = raw[2:len(raw)-2]
-#        print(str(raw))
-    #raw = bytes(raw, encoding='utf-8')
-    if mode == "cbc-enc":
+    if mode == 'cbc-enc':
+        print(iv,key)
         ct = cbc_enc(key,raw,iv)
         print('CipherText (CBC): ', ct)
         output.write(ct)
@@ -242,12 +254,6 @@ if __name__ == "__main__":# Need some shit about the special way we are going to
     else:
         print("Invalid Mode")
         exit()
-#    ct = cbc_enc(key,raw)
-#    dt = cbc_dec(key,ct)
-#    ct2 = ctr_enc(key,raw)
-#    dt2 = ctr_dec(key,ct2)
-#    print("PlainText(CBC): ",dt)
-#    print("CipherText(CTR): ",ct2)
-#    print("PlainText(CTR): ", dt2)
+
     output.close()
     input.close()

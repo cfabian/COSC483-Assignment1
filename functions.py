@@ -85,7 +85,7 @@ def cbc_enc(key,raw,iv):
     ct_split.append(iv)
     split_raw = list(chunks(raw,int(blocksize/8)))
     padded_split_raw = padding(split_raw)
-    print(padded_split_raw)
+    # print(padded_split_raw)
     for item in padded_split_raw:
         block = XOR(iv,item)
         iv = encrypt(key,block)
@@ -192,9 +192,9 @@ if __name__ == "__main__":# Need some shit about the special way we are going to
             if sys.argv[i] == '-k':
                 keyFile = sys.argv[i+1]
                 file = open(keyFile, 'rb')
-            #    for line in file:
-            #        key += line
-            #    key = binascii.unhexlify(key)
+                for line in file:
+                   key += line
+                key = binascii.unhexlify(key)
             elif sys.argv[i] == '-i':
                 inputFile = sys.argv[i+1]
             elif sys.argv[i] == '-o':
@@ -205,7 +205,6 @@ if __name__ == "__main__":# Need some shit about the special way we are going to
                 iv = bytes('', encoding='utf-8')
                 for line in file:
                     iv += line
-                print(len(iv))
     if keyFile == None or inputFile == None or outputFile == None:
         print(sys.argv)
         print("Usage: ./[cbc-enc/cbc-dec/ctr-enc/ctr-dec] -k keyFile -i inputFile -o outputFile (-v ivFile)")
@@ -213,7 +212,7 @@ if __name__ == "__main__":# Need some shit about the special way we are going to
     if iv == None:
         iv = IV_Gen()
     #TODO: get key and raw from files, the files are hex encoded
-    key = bytes("1234567890abcdef1234567890abcdef", encoding='utf-8')
+    #key = bytes("1234567890abcdef1234567890abcdef", encoding='utf-8')
     #raw = bytes("1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdefads", encoding='utf-8')
     output = open(outputFile, 'wb')
     input = open(inputFile, 'rb')
@@ -221,7 +220,6 @@ if __name__ == "__main__":# Need some shit about the special way we are going to
     for line in input:
         raw += line
     if mode == 'cbc-enc':
-        print(iv,key)
         ct = cbc_enc(key,raw,iv)
         print('CipherText (CBC): ', ct)
         output.write(ct)
